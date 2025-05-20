@@ -59,3 +59,7 @@ Aplikasi ini merupakan sistem manajemen perpustakaan berbasis web yang dibuat me
 ## 📄 Lisensi
 
 Aplikasi ini dibuat untuk keperluan pembelajaran dan pengembangan pribadi.
+
+---
+
+

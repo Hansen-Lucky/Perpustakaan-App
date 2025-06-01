@@ -1,65 +1,104 @@
-# 📚 Aplikasi Perpustakaan Digital
+# 📚 Website Perpustakaan App
 
-Aplikasi ini merupakan sistem manajemen perpustakaan berbasis web yang dibuat menggunakan ReactJS. Aplikasi ini memungkinkan petugas untuk mengelola data buku, anggota (member), peminjaman, pengembalian, dan denda secara efisien dan terstruktur.
+Website ini merupakan aplikasi manajemen perpustakaan digital berbasis ReactJS yang terhubung ke REST API eksternal. Aplikasi ini memudahkan petugas perpustakaan dalam mengelola data buku, anggota, peminjaman, pengembalian, serta denda secara cepat, efisien, dan terdokumentasi.
 
 ---
 
 ## 👤 Identitas Pembuat
 
-- **Nama**: Hansen Lucky Gunawan  
-- **Rombel**: PPLG XI-2  
-- **No. Absen**: 10
+* **Nama**: Hansen Lucky Gunawan  
+* **Rombel**: PPLG XI-2  
+* **No. Absen**: 10
 
 ---
 
 ## 🚀 Fitur-Fitur Utama
 
-### 🔐 Autentikasi
-- Halaman login untuk petugas
-- Sistem logout untuk mengamankan sesi pengguna
+### 🔐 Login & Logout
+
+* Autentikasi petugas menggunakan username dan password.
+* Menampilkan notifikasi sukses logout dan mencegah akses tanpa login.
 
 ### 🏠 Dashboard
-- Menampilkan ringkasan data perpustakaan seperti jumlah buku, member, peminjaman, dan denda
+
+* Menampilkan ringkasan data: total buku, anggota, peminjaman, dan denda.
+* Navigasi cepat ke seluruh fitur aplikasi.
 
 ### 👥 Manajemen Member
-- Menampilkan, menambah, mengedit, menghapus, dan melihat detail data member
-- Data: No KTP, Nama, Alamat, Tanggal Lahir
 
-### 📖 Manajemen Buku
-- Menampilkan, menambah, mengedit, menghapus, dan melihat detail buku
-- Data: No Rak, Judul, Pengarang, Penerbit, Tahun Terbit, Stok, Detail
+* Tambah, edit, lihat detail, dan hapus data anggota.
+* Data mencakup: No KTP, Nama, Alamat, Tanggal Lahir.
 
-### 🔄 Peminjaman Buku
-- Mencatat transaksi peminjaman dan pengembalian buku
-- Melihat riwayat peminjaman semua atau berdasarkan member
-- Ekspor data ke Excel dan PDF
-- Pengembalian otomatis menghasilkan data denda jika terlambat
+### 📚 Manajemen Buku
 
-### 📊 Grafik
-- Grafik bar peminjaman per bulan menggunakan Chart.js / Recharts
+* Tambah, edit, lihat detail, dan hapus buku.
+* Data: No Rak, Judul, Pengarang, Penerbit, Tahun Terbit, Stok.
 
-### 💸 Denda
-- Menampilkan, menambah, dan menghapus data denda
-- Menampilkan detail semua denda berdasarkan member
-- Data: Nama Member, Judul Buku, Jumlah Denda, Jenis Denda, Deskripsi
+### 🔁 Peminjaman & Pengembalian
+
+* Pencatatan transaksi peminjaman dan pengembalian buku.
+* Menampilkan status: Dipinjam, Dikembalikan, atau Terlambat.
+
+### 💸 Denda Otomatis & Manual
+
+* Perhitungan otomatis jika buku dikembalikan terlambat.
+* Tambah dan hapus denda secara manual.
+* Data: Nama Member, Judul Buku, Jumlah Denda, Jenis, Deskripsi.
+
+### 📊 Grafik Peminjaman
+
+* Visualisasi grafik bar peminjaman buku per bulan.
+* Filter berdasarkan tahun.
+
+### 🗂️ Export Data
+
+* Export data peminjaman ke **Excel** dan riwayat member ke **PDF**.
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## 🧠 Tujuan Proyek
 
-- ReactJS
-- Bootstrap
-- React Router
-- Axios
-- Chart.js / Recharts
-- jsPDF & SheetJS (xlsx)
+* Meningkatkan efisiensi operasional perpustakaan.
+* Menyediakan sistem digital untuk pengelolaan data buku dan anggota.
+* Mempermudah pelaporan, pencatatan, dan monitoring aktivitas perpustakaan.
+* Menyediakan solusi modern dan ramah pengguna untuk pengelolaan perpustakaan.
+
+---
+
+## 🔧 Teknologi yang Digunakan
+
+* ReactJS
+* Axios
+* Bootstrap
+* React Router DOM
+* Chart.js / Recharts
+* jsPDF & SheetJS (XLSX)
+* JWT Authentication
+
+---
+
+## 🧩 Spesifikasi Proyek
+
+* **CRUD Data** untuk buku, anggota, dan denda.
+* **Validasi dan proteksi halaman** jika tidak login.
+* **Export Excel & PDF** untuk dokumentasi transaksi.
+* **Grafik interaktif** untuk analisis peminjaman bulanan.
+* **Terhubung dengan REST API** sebagai backend.
+
+---
+
+## 🧭 Alur Aplikasi
+
+1. Petugas login ke aplikasi.
+2. Melihat ringkasan data di dashboard.
+3. Mengelola anggota dan buku perpustakaan.
+4. Mencatat transaksi peminjaman dan pengembalian.
+5. Otomatisasi pencatatan denda jika terjadi keterlambatan.
+6. Mengekspor laporan dalam format Excel atau PDF.
+7. Logout dan keluar dari sistem dengan aman.
 
 ---
 
 ## 📄 Lisensi
 
-Aplikasi ini dibuat untuk keperluan pembelajaran dan pengembangan pribadi.
-
----
-
-
+Website ini dikembangkan untuk keperluan pembelajaran dan tugas proyek sekolah SMK Wikrama Bogor oleh siswa jurusan PPLG XI-2.

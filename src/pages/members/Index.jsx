@@ -5,18 +5,19 @@ import Modal from "../../components/Modal";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 
-
 export default function MembersIndex() {
   const navigate = useNavigate();
+  // State utama
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [mode, setMode] = useState("list");
+  const [mode, setMode] = useState("list"); 
   const [selectedMember, setSelectedMember] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [alert, setAlert] = useState("");
 
+  // Form state untuk tambah/edit member
   const [form, setForm] = useState({
     no_ktp: "",
     nama: "",
@@ -26,10 +27,12 @@ export default function MembersIndex() {
 
   const token = localStorage.getItem("token");
 
+  // Fetch semua data saat komponen muncul
   useEffect(() => {
     fetchMembers();
   }, []);
 
+  // Alert
   useEffect(() => {
     if (alert) {
       const timer = setTimeout(() => setAlert(""), 3000);
@@ -37,7 +40,7 @@ export default function MembersIndex() {
     }
   }, [alert]);
 
-
+  // Error
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 3000);
@@ -45,13 +48,14 @@ export default function MembersIndex() {
     }
   }, [error]);
 
+  // Ambil data member
   async function fetchMembers() {
     try {
       setLoading(true);
       const res = await axios.get(`${API_URL}/member`, {
         headers: {
           Accept: "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, 
         },
       });
       setMembers(res.data.data || res.data);
@@ -67,11 +71,12 @@ export default function MembersIndex() {
     }
   }
 
-
+  // Update form state saat input diubah
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Buka form tambah/edit member, isi form jika edit
   const openForm = (member = null) => {
     if (member) {
       setForm({
@@ -94,6 +99,7 @@ export default function MembersIndex() {
     setError(null);
   };
 
+  // Submit form tambah atau update member
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -102,6 +108,7 @@ export default function MembersIndex() {
       Object.entries(form).forEach(([k, v]) => bodyForm.append(k, v));
 
       if (selectedMember) {
+        // Update member
         bodyForm.append("_method", "PUT");
         await axios.post(`${API_URL}/member/${selectedMember.id}`, bodyForm, {
           headers: {
@@ -112,6 +119,7 @@ export default function MembersIndex() {
         });
         setAlert("Member berhasil diupdate.");
       } else {
+        // Tambah member
         await axios.post(`${API_URL}/member`, bodyForm, {
           headers: {
             Accept: "application/json",
@@ -121,8 +129,8 @@ export default function MembersIndex() {
         });
         setAlert("Member berhasil ditambahkan.");
       }
-      fetchMembers();
-      setMode("list");
+      fetchMembers(); // Daftar member
+      setMode("list"); // List
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -133,16 +141,19 @@ export default function MembersIndex() {
     }
   };
 
+  // Detail member
   const openDetail = (member) => {
     setSelectedMember(member);
     setMode("detail");
   };
 
+  // Buka modal konfirmasi hapus member
   const openDeleteModal = (member) => {
     setSelectedMember(member);
     setIsModalOpen(true);
   };
 
+  // Hapus Member
   const handleDelete = async () => {
     try {
       await axios.delete(`${API_URL}/member/${selectedMember.id}`, {
@@ -153,8 +164,8 @@ export default function MembersIndex() {
       });
       setAlert("Berhasil menghapus member.");
       setIsModalOpen(false);
-      fetchMembers();
-      setMode("list");
+      fetchMembers(); // Refresh 
+      setMode("list"); // List
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -169,6 +180,7 @@ export default function MembersIndex() {
 
   return (
     <>
+      {/* Tampilkan alert sukses */}
       {alert && (
         <div
           className="alert alert-success alert-dismissible fade show"
@@ -184,6 +196,7 @@ export default function MembersIndex() {
         </div>
       )}
 
+      {/* Tampilkan alert error */}
       {error && (
         <div
           className="alert alert-danger alert-dismissible fade show"
@@ -199,6 +212,7 @@ export default function MembersIndex() {
         </div>
       )}
 
+      {/* Mode list: tabel data member */}
       {mode === "list" && (
         <>
           <div className="d-flex justify-content-between align-items-center mb-3">
@@ -262,6 +276,7 @@ export default function MembersIndex() {
         </>
       )}
 
+      {/* Mode form: tambah atau edit member */}
       {mode === "form" && (
         <>
           <h3>{selectedMember ? "Edit Member" : "Tambah Member"}</h3>
@@ -321,6 +336,7 @@ export default function MembersIndex() {
         </>
       )}
 
+      {/* Mode detail: tampilkan detail member */}
       {mode === "detail" && selectedMember && (
         <>
           <h3>Detail Member</h3>
@@ -343,6 +359,7 @@ export default function MembersIndex() {
         </>
       )}
 
+      {/* Modal konfirmasi hapus member */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

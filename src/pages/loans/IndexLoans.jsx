@@ -7,10 +7,13 @@ import autoTable from "jspdf-autotable";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 
+// Denda
 const DENDA_PER_HARI = 1000;
 
 export default function LoansIndex() {
   const navigate = useNavigate();
+
+  // State utama
   const [loans, setLoans] = useState([]);
   const [members, setMembers] = useState([]);
   const [books, setBooks] = useState([]);
@@ -18,9 +21,10 @@ export default function LoansIndex() {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState("");
   const [error, setError] = useState(null);
-  const [mode, setMode] = useState("list");
+  const [mode, setMode] = useState("list"); // list | form | detail
   const [selectedMemberId, setSelectedMemberId] = useState(null);
 
+  // Form state untuk tambah/edit data
   const [form, setForm] = useState({
     id_member: "",
     id_buku: "",
@@ -30,10 +34,12 @@ export default function LoansIndex() {
 
   const token = localStorage.getItem("token");
 
+  // Fetch semua data saat komponen muncul
   useEffect(() => {
     fetchAllData();
   }, []);
 
+  // Alert
   useEffect(() => {
     if (alert) {
       const timer = setTimeout(() => setAlert(""), 3000);
@@ -41,6 +47,7 @@ export default function LoansIndex() {
     }
   }, [alert]);
 
+  // Error
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 3000);
@@ -57,6 +64,7 @@ export default function LoansIndex() {
     return false;
   };
 
+  // Ambil semua data
   const fetchAllData = async () => {
     try {
       setLoading(true);
@@ -70,6 +78,7 @@ export default function LoansIndex() {
       const memberData = memberRes.data.data || memberRes.data;
       const bookData = bookRes.data.data || bookRes.data;
 
+      // Gabungkan data untuk ditampilkan
       const enriched = loanData.map((loan) => {
         const member = memberData.find((m) => String(m.id) === String(loan.id_member));
         const book = bookData.find((b) => String(b.id) === String(loan.id_buku));
@@ -101,10 +110,12 @@ export default function LoansIndex() {
     }
   };
 
+  // Update 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Tambah data peminjaman 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -129,6 +140,7 @@ export default function LoansIndex() {
     }
   };
 
+  // Ambil detail pinjaman berdasarkan member
   const handleDetailByMember = async (memberId) => {
     if (!memberId) {
       fetchAllData();
@@ -176,7 +188,7 @@ export default function LoansIndex() {
     }
   };
 
-
+  // Hitung jumlah denda
   const hitungDenda = (tgl_pengembalian) => {
     const hariIni = dayjs();
     const jatuhTempo = dayjs(tgl_pengembalian);
@@ -184,6 +196,7 @@ export default function LoansIndex() {
     return selisih > 0 ? selisih * DENDA_PER_HARI : 0;
   };
 
+  // Menandai buku sebagai dikembalikan
   const handleReturn = async (id) => {
     try {
       const loan = loans.find((l) => l.id === id);
@@ -195,6 +208,7 @@ export default function LoansIndex() {
 
       const jumlah_denda = hitungDenda(loan.tgl_pengembalian);
 
+      // Tambahkan data denda jika terlambat
       if (jumlah_denda > 0) {
         const formDenda = new FormData();
         formDenda.append("id_member", loan.id_member);
@@ -220,7 +234,7 @@ export default function LoansIndex() {
     }
   };
 
-
+  // Export ke Excel
   const exportExcel = () => {
     const exportData = loans.map((loan) => ({
       "Nama Member": loan.nama_member,
@@ -236,6 +250,7 @@ export default function LoansIndex() {
     XLSX.writeFile(workbook, "data-peminjaman.xlsx");
   };
 
+  // Export ke PDF
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.text("Riwayat Peminjaman Member", 14, 10);
@@ -254,6 +269,7 @@ export default function LoansIndex() {
 
   return (
     <div>
+      {/* Header + tombol */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3>Data Peminjaman</h3>
         {mode === "list" && (
@@ -268,13 +284,10 @@ export default function LoansIndex() {
         )}
         {mode === "detail" && (
           <div className="d-flex gap-2">
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                fetchAllData();
-                setMode("list");
-              }}
-            >
+            <button className="btn btn-secondary" onClick={() => {
+              fetchAllData();
+              setMode("list");
+            }}>
               Kembali
             </button>
             <button className="btn btn-danger" onClick={exportPDF}>
@@ -284,6 +297,7 @@ export default function LoansIndex() {
         )}
       </div>
 
+      {/* Alert */}
       {alert && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
           {alert}
@@ -297,89 +311,54 @@ export default function LoansIndex() {
         </div>
       )}
 
+      {/* Loading atau Form atau Tabel */}
       {loading ? (
         <p>Loading...</p>
       ) : mode === "form" ? (
+        // Form tambah data
         <>
           <h4>Tambah Peminjaman</h4>
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <label>Member</label>
-              <select
-                name="id_member"
-                className="form-control"
-                value={form.id_member}
-                onChange={handleChange}
-                required
-              >
+              <select name="id_member" className="form-control" value={form.id_member} onChange={handleChange} required>
                 <option value="">-- Pilih Member --</option>
                 {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nama}
-                  </option>
+                  <option key={m.id} value={m.id}>{m.nama}</option>
                 ))}
               </select>
             </div>
             <div className="mb-3">
               <label>Buku</label>
-              <select
-                name="id_buku"
-                className="form-control"
-                value={form.id_buku}
-                onChange={handleChange}
-                required
-              >
+              <select name="id_buku" className="form-control" value={form.id_buku} onChange={handleChange} required>
                 <option value="">-- Pilih Buku --</option>
                 {books.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.judul}
-                  </option>
+                  <option key={b.id} value={b.id}>{b.judul}</option>
                 ))}
               </select>
             </div>
             <div className="mb-3">
               <label>Tanggal Pinjam</label>
-              <input
-                type="date"
-                name="tgl_pinjam"
-                className="form-control"
-                value={form.tgl_pinjam}
-                onChange={handleChange}
-                required
-              />
+              <input type="date" name="tgl_pinjam" className="form-control" value={form.tgl_pinjam} onChange={handleChange} required />
             </div>
             <div className="mb-3">
               <label>Tanggal Pengembalian</label>
-              <input
-                type="date"
-                name="tgl_pengembalian"
-                className="form-control"
-                value={form.tgl_pengembalian}
-                onChange={handleChange}
-              />
+              <input type="date" name="tgl_pengembalian" className="form-control" value={form.tgl_pengembalian} onChange={handleChange} />
             </div>
-            <button className="btn btn-primary me-2" type="submit">
-              Simpan
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={() => setMode("list")}>
-              Batal
-            </button>
+            <button className="btn btn-primary me-2" type="submit">Simpan</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setMode("list")}>Batal</button>
           </form>
         </>
       ) : (
+        // Tabel data peminjaman
         <>
           {mode === "list" && (
             <div className="mb-3">
               <label>Lihat Riwayat Member</label>
-              <select
-                className="form-select w-auto d-inline-block ms-2"
-                onChange={(e) => handleDetailByMember(e.target.value)}
-              >
+              <select className="form-select w-auto d-inline-block ms-2" onChange={(e) => handleDetailByMember(e.target.value)}>
                 <option value="">Semua Member</option>
                 {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nama}
-                  </option>
+                  <option key={m.id} value={m.id}>{m.nama}</option>
                 ))}
               </select>
             </div>
@@ -397,9 +376,7 @@ export default function LoansIndex() {
             </thead>
             <tbody>
               {loans.length === 0 ? (
-                <tr>
-                  <td colSpan={6}>Tidak ada data</td>
-                </tr>
+                <tr><td colSpan={6}>Tidak ada data</td></tr>
               ) : (
                 loans.map((item, index) => (
                   <tr key={index}>
@@ -409,8 +386,7 @@ export default function LoansIndex() {
                     <td>{item.tgl_pengembalian ? dayjs(item.tgl_pengembalian).format("DD/MM/YYYY") : "-"}</td>
                     <td className={
                       item.status === "Dikembalikan" ? "text-secondary" :
-                        item.status === "Terlambat" ? "text-danger" :
-                          "text-success"
+                        item.status === "Terlambat" ? "text-danger" : "text-success"
                     }>
                       {item.status}
                     </td>

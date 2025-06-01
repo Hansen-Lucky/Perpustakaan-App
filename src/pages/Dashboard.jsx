@@ -9,11 +9,13 @@ const Dashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
 
+    // Jika tidak ada token, arahkan ke login
     if (!token) {
       navigate('/login');
       return;
     }
 
+    // Verifikasi token ke backend
     const verifyToken = async () => {
       try {
         await axios.get(`${API_URL}/user`, {
@@ -23,6 +25,7 @@ const Dashboard = () => {
           },
         });
       } catch (err) {
+        // Jika token tidak valid (401), hapus token dan arahkan ke login
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
           navigate('/login');

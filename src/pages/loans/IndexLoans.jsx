@@ -390,7 +390,7 @@ export default function LoansIndex() {
                     }>
                       {item.status}
                     </td>
-                    <td><button className="btn btn-sm btn-success" onClick={() => handleReturn(item.id)}>Kembalikan</button></td>
+                    <td className="d-flex justify-content-center"><button className="btn btn-sm btn-success" onClick={() => handleReturn(item.id)}>Kembalikan</button></td>
                   </tr>
                 ))
               )}

@@ -4,12 +4,15 @@ import { API_URL } from '../constant';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  // State untuk input dan notifikasi
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
   const navigate = useNavigate();
 
+  // Fungsi login ketika form disubmit
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -17,9 +20,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(`${API_URL}/login`, { email, password }, {
-        headers: {
-          Accept: 'application/json',
-        },
+        headers: { Accept: 'application/json' },
       });
 
       const { token } = response.data;
@@ -28,21 +29,19 @@ const Login = () => {
         localStorage.setItem('token', token);
         setSuccess('Login berhasil! Mengarahkan ke dashboard...');
       } else {
-        setError('Login gagal. Password dan email salah.');
+        setError('Login gagal. Email atau password salah.');
       }
-
     } catch (err) {
       setError(err.response?.data?.message || 'Login gagal. Periksa email dan password Anda.');
       localStorage.removeItem('token');
     }
   };
 
+  // Redirect otomatis ke dashboard setelah login berhasil
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
-      return () => clearTimeout(timer);
+      const timer = setTimeout(() => navigate('/dashboard'), 2000);
+      return () => clearTimeout(timer); // bersihkan timer saat komponen unmount
     }
   }, [success, navigate]);
 
@@ -54,30 +53,23 @@ const Login = () => {
           <h3 className="mt-2">Login</h3>
         </div>
 
+        {/* Alert Error */}
         {error && (
           <div className="alert alert-danger alert-dismissible fade show" role="alert">
             {error}
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setError('')}
-              aria-label="Close"
-            />
+            <button type="button" className="btn-close" onClick={() => setError('')} aria-label="Close" />
           </div>
         )}
 
+        {/* Alert Success */}
         {success && (
           <div className="alert alert-success alert-dismissible fade show" role="alert">
             {success}
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setSuccess('')}
-              aria-label="Close"
-            />
+            <button type="button" className="btn-close" onClick={() => setSuccess('')} aria-label="Close" />
           </div>
         )}
 
+        {/* Form Login */}
         <form onSubmit={handleLogin}>
           <div className="mb-3">
             <label>Email</label>
@@ -108,6 +100,7 @@ const Login = () => {
           </div>
         </form>
 
+        {/* Footer */}
         <p className="text-center text-muted mt-3 mb-0" style={{ fontSize: '0.9rem' }}>
           &copy; {new Date().getFullYear()} Aplikasi Perpustakaan
         </p>

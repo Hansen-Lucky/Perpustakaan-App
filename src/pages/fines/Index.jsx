@@ -266,7 +266,7 @@ export default function FinesIndex() {
                   <td>{f.jenis_denda}</td>
                   <td>{f.deskripsi}</td>
                   <td>
-                    <td>
+                    <td className="d-flex justify-content-center">
                       <button className="btn btn-info btn-sm me-2" onClick={() => handleViewDetail(f.id_member)}>Detail</button>
                       <button className="btn btn-danger btn-sm" onClick={() => openDeleteModal(f)}>Hapus</button>
                     </td>

@@ -221,7 +221,7 @@ export default function BooksIndex() {
                     <td className="text-center">{b.tahun_terbit}</td>
                     <td className="text-center">{b.stok}</td>
                     <td className="text-center">{b.detail}</td>
-                    <td className="text-center">
+                    <td className="d-flex justify-content-center">
                       <button className="btn btn-info btn-sm me-2" onClick={() => openDetail(b)}>Detail</button>
                       <button className="btn btn-warning btn-sm me-2" onClick={() => openForm(b)}>Edit</button>
                       <button className="btn btn-danger btn-sm" onClick={() => openDeleteModal(b)}>Hapus</button>

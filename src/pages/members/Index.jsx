@@ -12,7 +12,7 @@ export default function MembersIndex() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [mode, setMode] = useState("list"); 
+  const [mode, setMode] = useState("list");
   const [selectedMember, setSelectedMember] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [alert, setAlert] = useState("");
@@ -55,7 +55,7 @@ export default function MembersIndex() {
       const res = await axios.get(`${API_URL}/member`, {
         headers: {
           Accept: "application/json",
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
       });
       setMembers(res.data.data || res.data);
@@ -248,7 +248,7 @@ export default function MembersIndex() {
                     <td className="text-center">
                       {dayjs(m.tgl_lahir).format("DD/MM/YYYY")}
                     </td>
-                    <td className="text-center">
+                    <td className="d-flex justify-content-center">
                       <button
                         className="btn btn-info btn-sm me-2"
                         onClick={() => openDetail(m)}

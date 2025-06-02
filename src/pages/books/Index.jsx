@@ -4,18 +4,20 @@ import { API_URL } from "../../constant";
 import Modal from "../../components/Modal";
 import { useNavigate } from "react-router-dom";
 
-
+// Komponen utama halaman buku
 export default function BooksIndex() {
   const navigate = useNavigate();
+
+  // State untuk menyimpan data buku dan kondisi tampilan
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mode, setMode] = useState("list"); // list | form | detail
+  const [selectedBook, setSelectedBook] = useState(null); // buku terpilih
+  const [isModalOpen, setIsModalOpen] = useState(false); // kontrol modal hapus
+  const [alert, setAlert] = useState(""); // notifikasi sukses
 
-  const [mode, setMode] = useState("list");
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [alert, setAlert] = useState("");
-
+  // State untuk form input buku
   const [form, setForm] = useState({
     no_rak: "",
     judul: "",
@@ -26,12 +28,14 @@ export default function BooksIndex() {
     detail: "",
   });
 
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token"); // Ambil token dari localStorage
 
+  // Ambil data buku saat pertama kali komponen dimuat
   useEffect(() => {
     fetchBooks();
   }, []);
 
+  // Timer untuk menghapus alert setelah 3 detik
   useEffect(() => {
     if (alert) {
       const timer = setTimeout(() => setAlert(""), 3000);
@@ -39,6 +43,7 @@ export default function BooksIndex() {
     }
   }, [alert]);
 
+  // Timer untuk menghapus error setelah 3 detik
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 3000);
@@ -46,6 +51,7 @@ export default function BooksIndex() {
     }
   }, [error]);
 
+  // Fungsi mengambil data buku dari API
   async function fetchBooks() {
     try {
       setLoading(true);
@@ -55,15 +61,16 @@ export default function BooksIndex() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setBooks(res.data.data || res.data);
+      setBooks(res.data.data || res.data); // isi data ke state books
     } catch (err) {
-      handleUnauthorized(err);
+      handleUnauthorized(err); // cek jika token expired
       setError("Gagal mengambil data buku.");
     } finally {
       setLoading(false);
     }
   }
 
+  // Cek jika status 401 (token tidak valid), arahkan ke login
   const handleUnauthorized = (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
@@ -71,13 +78,15 @@ export default function BooksIndex() {
     }
   };
 
-
+  // Handler untuk input form
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Buka form tambah atau edit
   const openForm = (book = null) => {
     if (book) {
+      // Jika edit, isi form dengan data buku
       setForm({
         no_rak: book.no_rak,
         judul: book.judul,
@@ -89,6 +98,7 @@ export default function BooksIndex() {
       });
       setSelectedBook(book);
     } else {
+      // Jika tambah, kosongkan form
       setForm({
         no_rak: "",
         judul: "",
@@ -104,6 +114,7 @@ export default function BooksIndex() {
     setError(null);
   };
 
+  // Submit form tambah atau edit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -112,6 +123,7 @@ export default function BooksIndex() {
       Object.entries(form).forEach(([k, v]) => bodyForm.append(k, v));
 
       if (selectedBook) {
+        // Jika edit, gunakan method PUT via FormData
         bodyForm.append("_method", "PUT");
         await axios.post(`${API_URL}/buku/${selectedBook.id}`, bodyForm, {
           headers: {
@@ -122,6 +134,7 @@ export default function BooksIndex() {
         });
         setAlert("Buku berhasil diupdate.");
       } else {
+        // Jika tambah
         await axios.post(`${API_URL}/buku`, bodyForm, {
           headers: {
             Accept: "application/json",
@@ -132,7 +145,7 @@ export default function BooksIndex() {
         setAlert("Buku berhasil ditambahkan.");
       }
 
-      fetchBooks();
+      fetchBooks(); // refresh data
       setMode("list");
     } catch (err) {
       handleUnauthorized(err);
@@ -140,16 +153,19 @@ export default function BooksIndex() {
     }
   };
 
+  // Buka detail buku
   const openDetail = (book) => {
     setSelectedBook(book);
     setMode("detail");
   };
 
+  // Tampilkan modal konfirmasi hapus
   const openDeleteModal = (book) => {
     setSelectedBook(book);
     setIsModalOpen(true);
   };
 
+  // Proses hapus buku
   const handleDelete = async () => {
     try {
       await axios.delete(`${API_URL}/buku/${selectedBook.id}`, {
@@ -168,16 +184,20 @@ export default function BooksIndex() {
     }
   };
 
+  // Tampilkan loading saat proses ambil data
   if (loading) return <p>Loading...</p>;
 
   return (
     <>
+      {/* Tampilkan notifikasi sukses */}
       {alert && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
           {alert}
           <button type="button" className="btn-close" onClick={() => setAlert("")} />
         </div>
       )}
+
+      {/* Tampilkan notifikasi error */}
       {error && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           {error}
@@ -185,6 +205,7 @@ export default function BooksIndex() {
         </div>
       )}
 
+      {/* Mode daftar/list */}
       {mode === "list" && (
         <>
           <div className="d-flex justify-content-between align-items-center mb-3">
@@ -234,91 +255,49 @@ export default function BooksIndex() {
         </>
       )}
 
+      {/* Mode form tambah/edit */}
       {mode === "form" && (
         <>
           <h3>{selectedBook ? "Edit Buku" : "Tambah Buku"}</h3>
           <form onSubmit={handleSubmit}>
+            {/* Input Form */}
             <div className="mb-3">
               <label>No Rak</label>
-              <input
-                name="no_rak"
-                className="form-control"
-                value={form.no_rak}
-                onChange={handleChange}
-                required
-              />
+              <input name="no_rak" className="form-control" value={form.no_rak} onChange={handleChange} required />
             </div>
             <div className="mb-3">
               <label>Judul</label>
-              <input
-                name="judul"
-                className="form-control"
-                value={form.judul}
-                onChange={handleChange}
-                required
-              />
+              <input name="judul" className="form-control" value={form.judul} onChange={handleChange} required />
             </div>
             <div className="mb-3">
               <label>Pengarang</label>
-              <input
-                name="pengarang"
-                className="form-control"
-                value={form.pengarang}
-                onChange={handleChange}
-                required
-              />
+              <input name="pengarang" className="form-control" value={form.pengarang} onChange={handleChange} required />
             </div>
             <div className="mb-3">
               <label>Penerbit</label>
-              <input
-                name="penerbit"
-                className="form-control"
-                value={form.penerbit}
-                onChange={handleChange}
-                required
-              />
+              <input name="penerbit" className="form-control" value={form.penerbit} onChange={handleChange} required />
             </div>
             <div className="mb-3">
               <label>Tahun Terbit</label>
-              <input
-                type="number"
-                name="tahun_terbit"
-                className="form-control"
-                value={form.tahun_terbit}
-                onChange={handleChange}
-                required
-              />
+              <input type="number" name="tahun_terbit" className="form-control" value={form.tahun_terbit} onChange={handleChange} required />
             </div>
             <div className="mb-3">
               <label>Stok</label>
-              <input
-                type="number"
-                name="stok"
-                className="form-control"
-                value={form.stok}
-                onChange={handleChange}
-                required
-              />
+              <input type="number" name="stok" className="form-control" value={form.stok} onChange={handleChange} required />
             </div>
             <div className="mb-3">
               <label>Detail</label>
-              <textarea
-                name="detail"
-                className="form-control"
-                value={form.detail}
-                onChange={handleChange}
-              />
+              <textarea name="detail" className="form-control" value={form.detail} onChange={handleChange} />
             </div>
             <button className="btn btn-primary me-2" type="submit">
               {selectedBook ? "Update" : "Simpan"}
             </button>
-            <button className="btn btn-secondary" onClick={() => setMode("list")} type="button">
-              Batal
-            </button>
+            <button className="btn btn-secondary" type="button" onClick={() => setMode("list")}>Batal</button>
           </form>
         </>
       )}
 
+      {/* Mode detail */}
       {mode === "detail" && selectedBook && (
         <>
           <h3>Detail Buku</h3>
@@ -333,6 +312,7 @@ export default function BooksIndex() {
         </>
       )}
 
+      {/* Modal konfirmasi hapus */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Hapus Buku">
         <p>Yakin ingin menghapus buku <strong>{selectedBook?.judul}</strong>?</p>
         <div className="d-flex justify-content-end gap-2">

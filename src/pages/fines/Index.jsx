@@ -1,26 +1,29 @@
-// src/pages/fines/Index.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../../constant";
 import Modal from "../../components/Modal";
 import { useNavigate } from "react-router-dom";
 
-
+// Komponen utama
 export default function FinesIndex() {
   const navigate = useNavigate();
-  const [fines, setFines] = useState([]);
-  const [members, setMembers] = useState([]);
-  const [books, setBooks] = useState([]);
-  const [filteredFines, setFilteredFines] = useState([]);
-  const [selectedMember, setSelectedMember] = useState(null);
 
-  const [loading, setLoading] = useState(true);
-  const [alert, setAlert] = useState("");
-  const [error, setError] = useState(null);
-  const [mode, setMode] = useState("list");
-  const [selectedFine, setSelectedFine] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // State untuk data
+  const [fines, setFines] = useState([]);              // Semua data denda
+  const [members, setMembers] = useState([]);          // Semua data member
+  const [books, setBooks] = useState([]);              // Semua data buku
+  const [filteredFines, setFilteredFines] = useState([]); // Data denda berdasarkan member (untuk detail)
 
+  const [selectedMember, setSelectedMember] = useState(null); // Member yang dipilih (untuk detail)
+  const [loading, setLoading] = useState(true);         // Loading state
+  const [alert, setAlert] = useState("");               // Notifikasi sukses
+  const [error, setError] = useState(null);             // Notifikasi error
+
+  const [mode, setMode] = useState("list");             // Mode tampilan: list, form, detail
+  const [selectedFine, setSelectedFine] = useState(null); // Data denda yang akan dihapus
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal konfirmasi hapus
+
+  // State untuk form tambah denda
   const [form, setForm] = useState({
     id_member: "",
     id_buku: "",
@@ -31,10 +34,12 @@ export default function FinesIndex() {
 
   const token = localStorage.getItem("token");
 
+  // Ambil semua data saat pertama load
   useEffect(() => {
     fetchAll();
   }, []);
 
+  // Auto close alert
   useEffect(() => {
     if (alert) {
       const timer = setTimeout(() => setAlert(""), 3000);
@@ -42,6 +47,7 @@ export default function FinesIndex() {
     }
   }, [alert]);
 
+  // Auto close error
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 3000);
@@ -49,6 +55,7 @@ export default function FinesIndex() {
     }
   }, [error]);
 
+  // Ambil semua data: denda, member, buku
   const fetchAll = async () => {
     try {
       setLoading(true);
@@ -58,10 +65,12 @@ export default function FinesIndex() {
         axios.get(`${API_URL}/buku`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
+      // Ambil data dari response
       const fineData = fineRes.data.data || fineRes.data;
       const memberData = memberRes.data.data || memberRes.data;
       const bookData = bookRes.data.data || bookRes.data;
 
+      // Gabungkan data denda dengan nama member dan judul buku
       const enriched = fineData.map((fine) => {
         const member = memberData.find((m) => m.id === fine.id_member);
         const book = bookData.find((b) => b.id === fine.id_buku);
@@ -75,11 +84,10 @@ export default function FinesIndex() {
       setFines(enriched);
       setMembers(memberData);
       setBooks(bookData);
-
     } catch (err) {
       if (err.response && err.response.status === 401) {
         localStorage.removeItem("token");
-        navigate("/login");  
+        navigate("/login");
       } else {
         setError("Gagal memuat data denda");
       }
@@ -88,10 +96,12 @@ export default function FinesIndex() {
     }
   };
 
+  // Update form saat input berubah
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Kirim data denda baru ke API
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -119,12 +129,13 @@ export default function FinesIndex() {
     }
   };
 
-
+  // Buka modal hapus
   const openDeleteModal = (fine) => {
     setSelectedFine(fine);
     setIsModalOpen(true);
   };
 
+  // Hapus denda dari API
   const handleDelete = async () => {
     try {
       await axios.delete(`${API_URL}/denda/${selectedFine.id}`, {
@@ -143,6 +154,7 @@ export default function FinesIndex() {
     }
   };
 
+  // Lihat detail denda berdasarkan member
   const handleViewDetail = (memberId) => {
     const finesByMember = fines.filter(f => f.id_member === memberId);
     setSelectedMember(memberId);
@@ -150,8 +162,10 @@ export default function FinesIndex() {
     setMode("detail");
   };
 
+  // Return tampilan UI
   return (
     <div>
+      {/* Alert sukses dan error */}
       {alert && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
           {alert}
@@ -165,6 +179,7 @@ export default function FinesIndex() {
         </div>
       )}
 
+      {/* Header dan tombol tambah */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3>Data Denda</h3>
         {mode !== "form" && (
@@ -172,10 +187,14 @@ export default function FinesIndex() {
         )}
       </div>
 
+      {/* Tampil loading */}
       {loading ? (
         <p>Loading...</p>
+
+        // Tampilan form tambah denda
       ) : mode === "form" ? (
         <form onSubmit={handleSubmit}>
+          {/* Input member */}
           <div className="mb-3">
             <label>Member</label>
             <select name="id_member" className="form-control" value={form.id_member} onChange={handleChange} required>
@@ -185,6 +204,8 @@ export default function FinesIndex() {
               ))}
             </select>
           </div>
+
+          {/* Input buku */}
           <div className="mb-3">
             <label>Buku</label>
             <select name="id_buku" className="form-control" value={form.id_buku} onChange={handleChange} required>
@@ -194,10 +215,14 @@ export default function FinesIndex() {
               ))}
             </select>
           </div>
+
+          {/* Input jumlah denda */}
           <div className="mb-3">
             <label>Jumlah Denda</label>
             <input type="number" name="jumlah_denda" className="form-control" value={form.jumlah_denda} onChange={handleChange} required />
           </div>
+
+          {/* Input jenis denda */}
           <div className="mb-3">
             <label>Jenis Denda</label>
             <select name="jenis_denda" className="form-control" value={form.jenis_denda} onChange={handleChange} required>
@@ -206,13 +231,19 @@ export default function FinesIndex() {
               <option value="lainnya">Lainnya</option>
             </select>
           </div>
+
+          {/* Input deskripsi */}
           <div className="mb-3">
             <label>Deskripsi</label>
             <input name="deskripsi" className="form-control" value={form.deskripsi} onChange={handleChange} />
           </div>
+
+          {/* Tombol simpan dan batal */}
           <button className="btn btn-primary me-2" type="submit">Simpan</button>
           <button className="btn btn-secondary" type="button" onClick={() => setMode("list")}>Batal</button>
         </form>
+
+        // Tampilan detail denda per member
       ) : mode === "detail" ? (
         <div>
           <h5>Detail Denda untuk Member: {members.find(m => m.id === selectedMember)?.nama || "-"}</h5>
@@ -242,6 +273,8 @@ export default function FinesIndex() {
           </table>
           <button className="btn btn-secondary" onClick={() => setMode("list")}>Kembali</button>
         </div>
+
+        // Tampilan list semua denda
       ) : (
         <table className="table table-bordered text-center">
           <thead>
@@ -265,11 +298,9 @@ export default function FinesIndex() {
                   <td>Rp{f.jumlah_denda}</td>
                   <td>{f.jenis_denda}</td>
                   <td>{f.deskripsi}</td>
-                  <td>
-                    <td className="d-flex justify-content-center">
-                      <button className="btn btn-info btn-sm me-2" onClick={() => handleViewDetail(f.id_member)}>Detail</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => openDeleteModal(f)}>Hapus</button>
-                    </td>
+                  <td className="d-flex justify-content-center">
+                    <button className="btn btn-info btn-sm me-2" onClick={() => handleViewDetail(f.id_member)}>Detail</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => openDeleteModal(f)}>Hapus</button>
                   </td>
                 </tr>
               ))
@@ -278,6 +309,7 @@ export default function FinesIndex() {
         </table>
       )}
 
+      {/* Modal konfirmasi hapus */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Hapus Denda">
         <p>Yakin ingin menghapus denda ini?</p>
         <div className="d-flex justify-content-end gap-2">

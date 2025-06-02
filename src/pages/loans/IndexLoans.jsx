@@ -1,30 +1,31 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../../constant";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import dayjs from "dayjs";
+import * as XLSX from "xlsx"; // Untuk export Excel
+import jsPDF from "jspdf"; // Untuk export PDF
+import autoTable from "jspdf-autotable"; // Untuk membuat tabel di PDF
+import dayjs from "dayjs"; // Untuk manipulasi tanggal
 import { useNavigate } from "react-router-dom";
 
-// Denda
+// Konstanta denda per hari keterlambatan
 const DENDA_PER_HARI = 1000;
 
 export default function LoansIndex() {
   const navigate = useNavigate();
 
   // State utama
-  const [loans, setLoans] = useState([]);
-  const [members, setMembers] = useState([]);
-  const [books, setBooks] = useState([]);
+  const [loans, setLoans] = useState([]); // Data peminjaman
+  const [members, setMembers] = useState([]); // Data member
+  const [books, setBooks] = useState([]); // Data buku
 
+  // State tambahan
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState("");
   const [error, setError] = useState(null);
-  const [mode, setMode] = useState("list"); // list | form | detail
-  const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [mode, setMode] = useState("list"); // Tampilan: list | form | detail
+  const [selectedMemberId, setSelectedMemberId] = useState(null); // Untuk riwayat member tertentu
 
-  // Form state untuk tambah/edit data
+  // State form input peminjaman
   const [form, setForm] = useState({
     id_member: "",
     id_buku: "",
@@ -34,12 +35,12 @@ export default function LoansIndex() {
 
   const token = localStorage.getItem("token");
 
-  // Fetch semua data saat komponen muncul
+  // Saat pertama kali load, ambil semua data
   useEffect(() => {
     fetchAllData();
   }, []);
 
-  // Alert
+  // Reset alert setelah 3 detik
   useEffect(() => {
     if (alert) {
       const timer = setTimeout(() => setAlert(""), 3000);
@@ -47,7 +48,7 @@ export default function LoansIndex() {
     }
   }, [alert]);
 
-  // Error
+  // Reset error setelah 3 detik
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 3000);
@@ -55,6 +56,7 @@ export default function LoansIndex() {
     }
   }, [error]);
 
+  // Jika token tidak valid, redirect ke login
   const handleUnauthorized = (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem("token");
@@ -64,7 +66,7 @@ export default function LoansIndex() {
     return false;
   };
 
-  // Ambil semua data
+  // Ambil semua data: peminjaman, member, buku
   const fetchAllData = async () => {
     try {
       setLoading(true);
@@ -74,11 +76,12 @@ export default function LoansIndex() {
         axios.get(`${API_URL}/buku`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
+      // Normalisasi data
       const loanData = loanRes.data.data || loanRes.data;
       const memberData = memberRes.data.data || memberRes.data;
       const bookData = bookRes.data.data || bookRes.data;
 
-      // Gabungkan data untuk ditampilkan
+      // Gabungkan data member dan buku ke dalam loan
       const enriched = loanData.map((loan) => {
         const member = memberData.find((m) => String(m.id) === String(loan.id_member));
         const book = bookData.find((b) => String(b.id) === String(loan.id_buku));
@@ -98,6 +101,7 @@ export default function LoansIndex() {
         };
       });
 
+      // Set state
       setLoans(enriched);
       setMembers(memberData);
       setBooks(bookData);
@@ -110,12 +114,12 @@ export default function LoansIndex() {
     }
   };
 
-  // Update 
+  // Saat form berubah
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Tambah data peminjaman 
+  // Submit form peminjaman
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -140,7 +144,7 @@ export default function LoansIndex() {
     }
   };
 
-  // Ambil detail pinjaman berdasarkan member
+  // Lihat detail riwayat peminjaman berdasarkan member
   const handleDetailByMember = async (memberId) => {
     if (!memberId) {
       fetchAllData();
@@ -188,7 +192,7 @@ export default function LoansIndex() {
     }
   };
 
-  // Hitung jumlah denda
+  // Hitung denda berdasarkan keterlambatan
   const hitungDenda = (tgl_pengembalian) => {
     const hariIni = dayjs();
     const jatuhTempo = dayjs(tgl_pengembalian);
@@ -196,7 +200,7 @@ export default function LoansIndex() {
     return selisih > 0 ? selisih * DENDA_PER_HARI : 0;
   };
 
-  // Menandai buku sebagai dikembalikan
+  // Proses pengembalian buku + denda
   const handleReturn = async (id) => {
     try {
       const loan = loans.find((l) => l.id === id);
@@ -208,7 +212,7 @@ export default function LoansIndex() {
 
       const jumlah_denda = hitungDenda(loan.tgl_pengembalian);
 
-      // Tambahkan data denda jika terlambat
+      // Tambahkan denda jika terlambat
       if (jumlah_denda > 0) {
         const formDenda = new FormData();
         formDenda.append("id_member", loan.id_member);
@@ -234,7 +238,7 @@ export default function LoansIndex() {
     }
   };
 
-  // Export ke Excel
+  // Export data peminjaman ke Excel
   const exportExcel = () => {
     const exportData = loans.map((loan) => ({
       "Nama Member": loan.nama_member,
@@ -250,7 +254,7 @@ export default function LoansIndex() {
     XLSX.writeFile(workbook, "data-peminjaman.xlsx");
   };
 
-  // Export ke PDF
+  // Export data ke PDF
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.text("Riwayat Peminjaman Member", 14, 10);
@@ -269,9 +273,10 @@ export default function LoansIndex() {
 
   return (
     <div>
-      {/* Header + tombol */}
+      {/* Bagian header dengan judul dan tombol */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3>Data Peminjaman</h3>
+        {/* Tombol yang tampil tergantung mode */}
         {mode === "list" && (
           <div className="d-flex gap-2">
             <button className="btn btn-primary" onClick={() => setMode("form")}>
@@ -297,13 +302,15 @@ export default function LoansIndex() {
         )}
       </div>
 
-      {/* Alert */}
+      {/* Alert untuk sukses */}
       {alert && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
           {alert}
           <button type="button" className="btn-close" onClick={() => setAlert("")} />
         </div>
       )}
+
+      {/* Alert untuk error */}
       {error && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           {error}
@@ -311,14 +318,15 @@ export default function LoansIndex() {
         </div>
       )}
 
-      {/* Loading atau Form atau Tabel */}
+      {/* Kondisi Loading */}
       {loading ? (
         <p>Loading...</p>
       ) : mode === "form" ? (
-        // Form tambah data
+        // Form tambah peminjaman
         <>
           <h4>Tambah Peminjaman</h4>
           <form onSubmit={handleSubmit}>
+            {/* Dropdown pilih member */}
             <div className="mb-3">
               <label>Member</label>
               <select name="id_member" className="form-control" value={form.id_member} onChange={handleChange} required>
@@ -328,6 +336,8 @@ export default function LoansIndex() {
                 ))}
               </select>
             </div>
+
+            {/* Dropdown pilih buku */}
             <div className="mb-3">
               <label>Buku</label>
               <select name="id_buku" className="form-control" value={form.id_buku} onChange={handleChange} required>
@@ -337,23 +347,30 @@ export default function LoansIndex() {
                 ))}
               </select>
             </div>
+
+            {/* Input tanggal pinjam */}
             <div className="mb-3">
               <label>Tanggal Pinjam</label>
               <input type="date" name="tgl_pinjam" className="form-control" value={form.tgl_pinjam} onChange={handleChange} required />
             </div>
+
+            {/* Input tanggal pengembalian */}
             <div className="mb-3">
               <label>Tanggal Pengembalian</label>
               <input type="date" name="tgl_pengembalian" className="form-control" value={form.tgl_pengembalian} onChange={handleChange} />
             </div>
+
+            {/* Tombol simpan dan batal */}
             <button className="btn btn-primary me-2" type="submit">Simpan</button>
             <button type="button" className="btn btn-secondary" onClick={() => setMode("list")}>Batal</button>
           </form>
         </>
       ) : (
-        // Tabel data peminjaman
+        // Tabel daftar peminjaman (mode list atau detail)
         <>
           {mode === "list" && (
             <div className="mb-3">
+              {/* Dropdown untuk memilih member agar bisa lihat riwayat peminjaman per member */}
               <label>Lihat Riwayat Member</label>
               <select className="form-select w-auto d-inline-block ms-2" onChange={(e) => handleDetailByMember(e.target.value)}>
                 <option value="">Semua Member</option>
@@ -363,6 +380,8 @@ export default function LoansIndex() {
               </select>
             </div>
           )}
+
+          {/* Tabel menampilkan data peminjaman */}
           <table className="table table-bordered text-center">
             <thead>
               <tr>
@@ -375,6 +394,7 @@ export default function LoansIndex() {
               </tr>
             </thead>
             <tbody>
+              {/* Jika data kosong */}
               {loans.length === 0 ? (
                 <tr><td colSpan={6}>Tidak ada data</td></tr>
               ) : (
@@ -390,7 +410,10 @@ export default function LoansIndex() {
                     }>
                       {item.status}
                     </td>
-                    <td className="d-flex justify-content-center"><button className="btn btn-sm btn-success" onClick={() => handleReturn(item.id)}>Kembalikan</button></td>
+                    <td className="d-flex justify-content-center">
+                      {/* Tombol kembalikan buku */}
+                      <button className="btn btn-sm btn-success" onClick={() => handleReturn(item.id)}>Kembalikan</button>
+                    </td>
                   </tr>
                 ))
               )}
